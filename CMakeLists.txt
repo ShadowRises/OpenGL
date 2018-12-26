@@ -14,6 +14,12 @@ find_package(OpenGL REQUIRED)
 if(OPENGL_FOUND)
     add_subdirectory(lib)
 
-    add_executable(${PROJECT_NAME} src/main.cpp)
-    target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES} glfw)
+    add_executable(${PROJECT_NAME}
+            src/main.cpp
+            src/callbacks.cpp
+            src/glad.c)
+
+    target_link_libraries(${PROJECT_NAME}
+            ${OPENGL_LIBRARIES}
+            glfw)
 endif()
