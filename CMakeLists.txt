@@ -17,7 +17,8 @@ if(OPENGL_FOUND)
     add_executable(${PROJECT_NAME}
             src/main.cpp
             src/callbacks.cpp
-            src/glad.c)
+            src/glad.c
+            src/shader_utility.cpp)
 
     target_link_libraries(${PROJECT_NAME}
             ${OPENGL_LIBRARIES}
