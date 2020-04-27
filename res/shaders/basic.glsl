@@ -8,7 +8,8 @@ out vec3 ex_color;
 
 void main() {
         ex_color = color;
-        gl_Position = vec4(position.xyz, 1.0);
+        gl_Position = vec4(position,
+                           1.f);
 }
 
 
@@ -19,5 +20,5 @@ in vec3 ex_color;
 out vec4 FragColor;
  
 void main() {
-        FragColor = vec4(ex_color.xyz, 1.0f);
+       FragColor = vec4(ex_color, 1.0f);
 }

@@ -2,8 +2,11 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 
+#include <glm/glm.hpp>
+#include <glm/ext/matrix_clip_space.hpp>
+
 #include "callbacks.hpp"
-#include "shader_utility.hpp"
+#include "shader.hpp"
 
 constexpr int WINDOW_WIDTH = 800;
 constexpr int WINDOW_HEIGHT = 640;
@@ -54,19 +57,50 @@ int main(int argc, char* argv[]) {
 
 
         // Build and compile the vertex shader program
-	ShadersSources shaderSources = parseShader(argv[1]);
-	unsigned int shaderProgram = createShader(shaderSources.VertexShader, shaderSources.FragmentShader);
+	Shader shaders(argv[1]);
+
+	// float vertices[] = {
+	//       /*  x      y     z   color  */
+	// 	-0.5f, -0.5f, 0.f, 1.f, 0.f, 0.f,
+	// 	 0.5f, -0.5f, 0.f, 0.f, 1.f, 0.f, 
+	// 	 0.f,   0.5f, 0.f, 0.f, 0.f, 1.f,
+
+	// 	 1.f,  0.5f, 0.f, 1.f, 1.f, 1.f,
+	// };
 
 	float vertices[] = {
-	      /*  x      y     z   color  */
-		-0.5f, -0.5f, 0.f, 1.0f, 0.0f, 0.0f,
-		 0.5f, -0.5f, 0.f, 0.0f, 1.0f, 0.0f, 
-		 0.f,   0.5f, 0.f, 0.0f, 0.0f, 1.0f
+		-0.25f,  0.25f, 0.f, 1.f, 1.f, 1.f,
+		 0.25f,  0.25f, 0.f, 1.f, 1.f, 1.f,
+		 0.25f, -0.25f, 0.f, 1.f, 1.f, 1.f,
+		-0.25f, -0.25f, 0.f, 1.f, 1.f, 1.f,
+
+		-0.25f,  0.25f, 0.5f, 1.f, 1.f, 1.f,
+		 0.25f,  0.25f, 0.5f, 1.f, 1.f, 1.f,
+		 0.25f, -0.25f, 0.5f, 1.f, 1.f, 1.f,
+		-0.25f, -0.25f, 0.5f, 1.f, 1.f, 1.f,
 	};
 
-	unsigned int VBO, VAO; // VBO = Vertex Buffer Object; VAO = Vertex Array Object
+	unsigned int indices[] = {
+		0, 1, 2,
+		0, 2, 3,
+
+		4, 5, 6,
+		4, 6, 7,
+
+		0, 4, 7,
+		0, 7, 3,
+
+		1, 5, 6,
+		1, 6, 2,
+	};
+
+	
+	unsigned int VBO, VAO, EBO; // VBO = Vertex Buffer Object
+	                            // VAO = Vertex Array Object
+	                            // EBO = Element Buffer Object
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
+	glGenBuffers(1, &EBO);
 
 	// Bind the VAO to the current Vertex Array Object
 	glBindVertexArray(VAO);
@@ -76,8 +110,8 @@ int main(int argc, char* argv[]) {
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
 	// Attribution of an index for each Vertex Shader inputs
-	unsigned int posAttrib = glGetAttribLocation(shaderProgram, "position");
-	unsigned int colorAttrib = glGetAttribLocation(shaderProgram, "color");
+	unsigned int posAttrib = glGetAttribLocation(shaders.get_program_id(), "position");
+	unsigned int colorAttrib = glGetAttribLocation(shaders.get_program_id(), "color");
 
 	// Attribution of the position data
 	glEnableVertexAttribArray(posAttrib);
@@ -86,21 +120,27 @@ int main(int argc, char* argv[]) {
 	// Attribution of the color data
 	glEnableVertexAttribArray(colorAttrib);
 	glVertexAttribPointer(colorAttrib, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*) (3 * sizeof(float)));
-	
-	glUseProgram(shaderProgram);
 
+	// Bind the EBO to the current Element Buffer Object + fills it
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+	shaders.use();
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	// Main loop
 	while(!glfwWindowShouldClose(window)) {
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0);
+		glClearColor(0.f, 0.f, 0.f, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		// glDrawArrays(GL_TRIANGLES, 0, 3);
+		glDrawElements(GL_TRIANGLES, 8, GL_UNSIGNED_INT, 0);
 
 		glfwPollEvents();
 		glfwSwapBuffers(window);
 	}
 
-	glDeleteProgram(shaderProgram);
+	glDeleteProgram(shaders.get_program_id());
 
 	glfwTerminate();
 	return 0;

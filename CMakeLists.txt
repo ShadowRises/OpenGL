@@ -18,9 +18,13 @@ if(OPENGL_FOUND)
             src/main.cpp
             src/callbacks.cpp
             src/glad.c
-            src/shader_utility.cpp)
+            src/shader.cpp)
 
     target_link_libraries(${PROJECT_NAME}
             ${OPENGL_LIBRARIES}
             glfw)
 endif()
+
+configure_file(
+  res/shaders/basic.glsl ${CMAKE_CURRENT_BINARY_DIR}/res/shaders/basic.glsl COPYONLY
+)
