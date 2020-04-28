@@ -1,21 +1,33 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <sstream>
+#include <cstring>
 
-#include <glm/glm.hpp>
-#include <glm/ext/matrix_clip_space.hpp>
-
+#include "stb/stb_image.h"
 #include "callbacks.hpp"
 #include "shader.hpp"
 
 constexpr int WINDOW_WIDTH = 800;
 constexpr int WINDOW_HEIGHT = 640;
 
+void usage(const char* command, bool error = false) {
+	std::stringstream message;
+	message << "Usage : " << command << " SHADER_FILE [TEXTURE_FILE]" << "\n";
+	if (error)
+		std::cerr << message.str();
+	else
+		std::cout << message.str();
+}
+
 int main(int argc, char* argv[]) {
 	// Check if we passed shader to the program
 	if (argc == 1) {
-		std::cerr << "Usage : " << argv[0] << " SHADER_FILE" << std::endl;
-		return -1;
+		usage(argv[0], true);
+		return 1;
+	} else if (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0) {
+		usage(argv[0]);
+		return 0;
 	}
 	
 	// Initialization of GLFW
@@ -55,45 +67,42 @@ int main(int argc, char* argv[]) {
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetKeyCallback(window, processInputs);
 
+	// Get the texture if passed to the program
+	int width, height, nb_channels;
+	unsigned char* texture_data = 0;
+	unsigned int texture;
+
+	if (argc == 3) {
+		texture_data = stbi_load(argv[2], &width, &height, &nb_channels, 0);
+
+		if (texture_data) {
+			glGenTextures(1, &texture);
+			glBindTexture(GL_TEXTURE_2D, texture);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, texture_data);
+			glGenerateMipmap(GL_TEXTURE_2D);
+		
+			stbi_image_free(texture_data);
+		} else {
+			std::cerr << "Error while loading texture" << "\n";
+			return 1;
+		}
+	}
 
         // Build and compile the vertex shader program
 	Shader shaders(argv[1]);
 
-	// float vertices[] = {
-	//       /*  x      y     z   color  */
-	// 	-0.5f, -0.5f, 0.f, 1.f, 0.f, 0.f,
-	// 	 0.5f, -0.5f, 0.f, 0.f, 1.f, 0.f, 
-	// 	 0.f,   0.5f, 0.f, 0.f, 0.f, 1.f,
-
-	// 	 1.f,  0.5f, 0.f, 1.f, 1.f, 1.f,
-	// };
-
 	float vertices[] = {
-		-0.25f,  0.25f, 0.f, 1.f, 1.f, 1.f,
-		 0.25f,  0.25f, 0.f, 1.f, 1.f, 1.f,
-		 0.25f, -0.25f, 0.f, 1.f, 1.f, 1.f,
-		-0.25f, -0.25f, 0.f, 1.f, 1.f, 1.f,
-
-		-0.25f,  0.25f, 0.5f, 1.f, 1.f, 1.f,
-		 0.25f,  0.25f, 0.5f, 1.f, 1.f, 1.f,
-		 0.25f, -0.25f, 0.5f, 1.f, 1.f, 1.f,
-		-0.25f, -0.25f, 0.5f, 1.f, 1.f, 1.f,
+	      /*   x      y     z           color         texture coords  */
+		 0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f, // top right
+		 0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f, // bottom right
+		-0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // bottom left
+		-0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f, // bottom right
 	};
 
 	unsigned int indices[] = {
 		0, 1, 2,
 		0, 2, 3,
-
-		4, 5, 6,
-		4, 6, 7,
-
-		0, 4, 7,
-		0, 7, 3,
-
-		1, 5, 6,
-		1, 6, 2,
 	};
-
 	
 	unsigned int VBO, VAO, EBO; // VBO = Vertex Buffer Object
 	                            // VAO = Vertex Array Object
@@ -112,14 +121,21 @@ int main(int argc, char* argv[]) {
 	// Attribution of an index for each Vertex Shader inputs
 	unsigned int posAttrib = glGetAttribLocation(shaders.get_program_id(), "position");
 	unsigned int colorAttrib = glGetAttribLocation(shaders.get_program_id(), "color");
+	unsigned int textureAttrib = glGetAttribLocation(shaders.get_program_id(), "texture_coord");
 
 	// Attribution of the position data
 	glEnableVertexAttribArray(posAttrib);
-	glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*) 0);
+	glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*) 0);
 
 	// Attribution of the color data
 	glEnableVertexAttribArray(colorAttrib);
-	glVertexAttribPointer(colorAttrib, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*) (3 * sizeof(float)));
+	glVertexAttribPointer(colorAttrib, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*) (3 * sizeof(float)));
+
+	// Attribution of the texture data
+	glEnableVertexAttribArray(textureAttrib);
+	glVertexAttribPointer(textureAttrib, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*) (6 * sizeof(float)));
+	// glBindTexture(GL_TEXTURE_2D, texture);
+	
 
 	// Bind the EBO to the current Element Buffer Object + fills it
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
@@ -127,14 +143,13 @@ int main(int argc, char* argv[]) {
 
 	shaders.use();
 
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	// Main loop
 	while(!glfwWindowShouldClose(window)) {
 		glClearColor(0.f, 0.f, 0.f, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		// glDrawArrays(GL_TRIANGLES, 0, 3);
-		glDrawElements(GL_TRIANGLES, 8, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, sizeof(vertices) / sizeof(float), GL_UNSIGNED_INT, 0);
 
 		glfwPollEvents();
 		glfwSwapBuffers(window);

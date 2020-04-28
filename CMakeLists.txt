@@ -18,7 +18,8 @@ if(OPENGL_FOUND)
             src/main.cpp
             src/callbacks.cpp
             src/glad.c
-            src/shader.cpp)
+            src/shader.cpp
+            src/stb_image.cpp)
 
     target_link_libraries(${PROJECT_NAME}
             ${OPENGL_LIBRARIES}
@@ -27,4 +28,16 @@ endif()
 
 configure_file(
   res/shaders/basic.glsl ${CMAKE_CURRENT_BINARY_DIR}/res/shaders/basic.glsl COPYONLY
+)
+
+configure_file(
+  res/shaders/texture.glsl ${CMAKE_CURRENT_BINARY_DIR}/res/shaders/texture.glsl COPYONLY
+)
+
+configure_file(
+  res/textures/wall.jpg ${CMAKE_CURRENT_BINARY_DIR}/res/textures/wall.jpg COPYONLY
+)
+
+configure_file(
+  res/textures/container.jpg ${CMAKE_CURRENT_BINARY_DIR}/res/textures/container.jpg COPYONLY
 )
