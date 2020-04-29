@@ -41,3 +41,7 @@ configure_file(
 configure_file(
   res/textures/container.jpg ${CMAKE_CURRENT_BINARY_DIR}/res/textures/container.jpg COPYONLY
 )
+
+configure_file(
+  res/textures/awesomeface.png ${CMAKE_CURRENT_BINARY_DIR}/res/textures/awesomeface.png COPYONLY
+)

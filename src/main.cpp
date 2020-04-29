@@ -13,7 +13,7 @@ constexpr int WINDOW_HEIGHT = 640;
 
 void usage(const char* command, bool error = false) {
 	std::stringstream message;
-	message << "Usage : " << command << " SHADER_FILE [TEXTURE_FILE]" << "\n";
+	message << "Usage : " << command << " SHADER_FILE [TEXTURE_FILES]" << "\n";
 	if (error)
 		std::cerr << message.str();
 	else
@@ -69,22 +69,43 @@ int main(int argc, char* argv[]) {
 
 	// Get the texture if passed to the program
 	int width, height, nb_channels;
-	unsigned char* texture_data = 0;
-	unsigned int texture;
+	unsigned char* texture_data = nullptr;
+	unsigned int textures[2];
 
-	if (argc == 3) {
+	if (argc >= 3) {
+		stbi_set_flip_vertically_on_load(true);
+		
 		texture_data = stbi_load(argv[2], &width, &height, &nb_channels, 0);
 
 		if (texture_data) {
-			glGenTextures(1, &texture);
-			glBindTexture(GL_TEXTURE_2D, texture);
+			glGenTextures(2, textures);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, textures[0]);
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, texture_data);
 			glGenerateMipmap(GL_TEXTURE_2D);
 		
 			stbi_image_free(texture_data);
+			texture_data = nullptr;
 		} else {
-			std::cerr << "Error while loading texture" << "\n";
+			std::cerr << "Error while loading texture \"" << argv[2] << "\"" << "\n";
 			return 1;
+		}
+
+		if (argc == 4) {
+			texture_data = stbi_load(argv[3], &width, &height, &nb_channels, 0);
+
+			if (texture_data) {
+				glActiveTexture(GL_TEXTURE1);
+				glBindTexture(GL_TEXTURE_2D, textures[1]);
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, texture_data);
+				glGenerateMipmap(GL_TEXTURE_2D);
+
+				stbi_image_free(texture_data);
+				texture_data = nullptr;
+			} else {
+				std::cerr << "Error while loading texture \"" << argv[3] << "\"" << "\n";
+				return 1;
+			}
 		}
 	}
 
@@ -142,6 +163,12 @@ int main(int argc, char* argv[]) {
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 	shaders.use();
+
+	// Setting the textures
+	if (textures != nullptr) {
+		shaders.set_int("texture_data1", 0);
+		shaders.set_int("texture_data2", 1);
+	}
 
 	// Main loop
 	while(!glfwWindowShouldClose(window)) {
