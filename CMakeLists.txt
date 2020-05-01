@@ -35,6 +35,10 @@ configure_file(
 )
 
 configure_file(
+  res/shaders/transform.glsl ${CMAKE_CURRENT_BINARY_DIR}/res/shaders/transform.glsl COPYONLY
+)
+
+configure_file(
   res/textures/wall.jpg ${CMAKE_CURRENT_BINARY_DIR}/res/textures/wall.jpg COPYONLY
 )
 
