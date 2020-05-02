@@ -39,6 +39,10 @@ configure_file(
 )
 
 configure_file(
+  res/shaders/projection.glsl ${CMAKE_CURRENT_BINARY_DIR}/res/shaders/projection.glsl COPYONLY
+)
+
+configure_file(
   res/textures/wall.jpg ${CMAKE_CURRENT_BINARY_DIR}/res/textures/wall.jpg COPYONLY
 )
 

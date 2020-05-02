@@ -1,9 +1,11 @@
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+
 #include <iostream>
 #include <sstream>
 #include <cstring>
+#include <vector>
 
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -18,7 +20,7 @@ void usage(const char *command, bool error = false)
 {
 	std::stringstream message;
 	message << "Usage : " << command << " SHADER_FILE [TEXTURE_FILES]"
-		<< "\n";
+			<< "\n";
 	if (error)
 		std::cerr << message.str();
 	else
@@ -106,7 +108,7 @@ int main(int argc, char *argv[])
 		else
 		{
 			std::cerr << "Error while loading texture \"" << argv[2] << "\""
-				  << "\n";
+					  << "\n";
 			return 1;
 		}
 
@@ -127,7 +129,7 @@ int main(int argc, char *argv[])
 			else
 			{
 				std::cerr << "Error while loading texture \"" << argv[3] << "\""
-					  << "\n";
+						  << "\n";
 				return 1;
 			}
 		}
@@ -137,21 +139,70 @@ int main(int argc, char *argv[])
 	Shader shaders(argv[1]);
 
 	float vertices[] = {
-		/*   x      y     z           color         texture coords  */
-		0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,	  // top right
-		0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,  // bottom right
-		-0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
-		-0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,  // bottom right
+		/* x      y     z        color         texture coords  */
+		0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,	  // top right
+		0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,  // bottom right
+		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
+		-0.5f, 0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,  // bottom right
+
+		0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+		0.5f, -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+		-0.5f, 0.5f, 0.5f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+
+		-0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+		-0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+
+		0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+		0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+		0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+		0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+
+		0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+		0.5f, -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+
+		0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+		0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+		-0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+		-0.5f, 0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
 	};
 
 	unsigned int indices[] = {
-		0,
-		1,
-		2,
-		0,
-		2,
-		3,
+		0, 1, 2,
+		0, 2, 3,
+
+		4, 5, 6,
+		4, 6, 7,
+
+		8, 9, 10,
+		8, 10, 11,
+
+		12, 13, 14,
+		12, 14, 15,
+
+		16, 17, 18,
+		16, 18, 19,
+
+		20, 21, 22,
+		20, 22, 23,
 	};
+
+	std::vector<glm::vec3> cubes_positions({
+		glm::vec3( 0.0f,  0.0f,  0.0f), 
+		glm::vec3( 2.0f,  5.0f, -15.0f), 
+		glm::vec3(-1.5f, -2.2f, -2.5f),  
+		glm::vec3(-3.8f, -2.0f, -12.3f),  
+		glm::vec3( 2.4f, -0.4f, -3.5f),  
+		glm::vec3(-1.7f,  3.0f, -7.5f),  
+		glm::vec3( 1.3f, -2.0f, -2.5f),  
+		glm::vec3( 1.5f,  2.0f, -2.5f), 
+		glm::vec3( 1.5f,  0.2f, -1.5f), 
+		glm::vec3(-1.3f,  1.0f, -1.5f),
+	});
 
 	unsigned int VBO, VAO, EBO; // VBO = Vertex Buffer Object
 								// VAO = Vertex Array Object
@@ -199,26 +250,65 @@ int main(int argc, char *argv[])
 	}
 
 	bool is_transform = false;
+	bool is_projection = false;
+
 	if (strstr(argv[1], "transform") != nullptr)
+	{
 		is_transform = true;
+	}
+	else if (strstr(argv[1], "projection") != nullptr)
+	{
+		is_projection = true;
+		glm::mat4 view(1.f);
+		view = glm::translate(view, glm::vec3(0.f, 0.f, -3.f));
+
+		shaders.set_mat4("u_view", view);
+
+		glm::mat4 projection(1.f);
+		projection = glm::perspective(glm::radians(45.f), (float)(WINDOW_WIDTH / WINDOW_HEIGHT), 0.1f, 100.f);
+
+		shaders.set_mat4("u_projection", projection);
+	}
+
+	glEnable(GL_DEPTH_TEST);
+
 
 	// Main loop
 	while (!glfwWindowShouldClose(window))
 	{
 		glClearColor(0.f, 0.f, 0.f, 1.f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		if (is_transform)
 		{
 			glm::mat4 transform = glm::mat4(1.f);
-			transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.f, 0.f, 1.f));
+			transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(1.f, 0.f, 0.f));
 			transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.f));
 
 			shaders.set_mat4("u_transform", transform);
 		}
+		else if (is_projection)
+		{
+			unsigned int i = 0;
+			for (auto &vec : cubes_positions) {
+				glm::mat4 model(1.f);
+				model = glm::translate(model, vec);
+
+				float angle = 20.f * i;
+
+				model = glm::rotate(model, glm::radians(angle), glm::vec3(1.f, 1.f, 0.f));
+
+				shaders.set_mat4("u_model", model);
+
+				glDrawElements(GL_TRIANGLES, sizeof(vertices) / sizeof(float), GL_UNSIGNED_INT, 0);
+
+				++i;
+			}
+		}
 
 		// glDrawArrays(GL_TRIANGLES, 0, 3);
-		glDrawElements(GL_TRIANGLES, sizeof(vertices) / sizeof(float), GL_UNSIGNED_INT, 0);
+		if (!is_projection)
+			glDrawElements(GL_TRIANGLES, sizeof(vertices) / sizeof(float), GL_UNSIGNED_INT, 0);
 
 		glfwPollEvents();
 		glfwSwapBuffers(window);
