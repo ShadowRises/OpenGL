@@ -2,11 +2,10 @@
 #include <sstream>
 #include <cstring>
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include "stb/stb_image.h"
 #include "callbacks.hpp"
@@ -19,7 +18,7 @@ void usage(const char *command, bool error = false)
 {
 	std::stringstream message;
 	message << "Usage : " << command << " SHADER_FILE [TEXTURE_FILES]"
-			<< "\n";
+		<< "\n";
 	if (error)
 		std::cerr << message.str();
 	else
@@ -84,6 +83,7 @@ int main(int argc, char *argv[])
 	int width, height, nb_channels;
 	unsigned char *texture_data = nullptr;
 	unsigned int textures[2];
+	bool use_texture = false;
 
 	if (argc >= 3)
 	{
@@ -96,16 +96,17 @@ int main(int argc, char *argv[])
 			glGenTextures(2, textures);
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, textures[0]);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, texture_data);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, (strstr(argv[2], ".jpg") != nullptr) ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, texture_data);
 			glGenerateMipmap(GL_TEXTURE_2D);
 
 			stbi_image_free(texture_data);
 			texture_data = nullptr;
+			use_texture = true;
 		}
 		else
 		{
 			std::cerr << "Error while loading texture \"" << argv[2] << "\""
-					  << "\n";
+				  << "\n";
 			return 1;
 		}
 
@@ -117,7 +118,7 @@ int main(int argc, char *argv[])
 			{
 				glActiveTexture(GL_TEXTURE1);
 				glBindTexture(GL_TEXTURE_2D, textures[1]);
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, texture_data);
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, (strstr(argv[3], ".jpg") != nullptr) ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, texture_data);
 				glGenerateMipmap(GL_TEXTURE_2D);
 
 				stbi_image_free(texture_data);
@@ -126,7 +127,7 @@ int main(int argc, char *argv[])
 			else
 			{
 				std::cerr << "Error while loading texture \"" << argv[3] << "\""
-						  << "\n";
+					  << "\n";
 				return 1;
 			}
 		}
@@ -191,19 +192,15 @@ int main(int argc, char *argv[])
 	shaders.use();
 
 	// Setting the textures
-	if (textures != nullptr)
+	if (use_texture)
 	{
 		shaders.set_int("texture_data1", 0);
 		shaders.set_int("texture_data2", 1);
 	}
 
 	bool is_transform = false;
-	unsigned int u_transform;
 	if (strstr(argv[1], "transform") != nullptr)
-	{
 		is_transform = true;
-		u_transform = glGetUniformLocation(shaders.get_program_id(), "u_transform");
-	}
 
 	// Main loop
 	while (!glfwWindowShouldClose(window))
@@ -217,7 +214,7 @@ int main(int argc, char *argv[])
 			transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.f, 0.f, 1.f));
 			transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.f));
 
-			glUniformMatrix4fv(u_transform, 1, GL_FALSE, glm::value_ptr(transform));
+			shaders.set_mat4("u_transform", transform);
 		}
 
 		// glDrawArrays(GL_TRIANGLES, 0, 3);
